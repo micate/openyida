@@ -27,7 +27,7 @@ UI 和产品设计输入来自 `yida-design` 输出的 `prd/<项目名>/prd.md` 
 - 页面源码路径按 Bash cwd 选择：从仓库根执行命令时用 `project/pages/src/...`；cwd 已是 `<workspace>/project` 时用 `pages/src/...`。
 - `runtimeCode` 在运行页面真实 `window` 中执行，入口必须返回 `YidaComp` / `YidaComp.default` / 组件函数。
 - 推荐入口写法是 `function YidaComp(props) { ... }`，或 `const App = ...; export default App;`。CLI 已兼容 `const/let/class YidaComp; export default YidaComp`，但生成新代码时优先避开同名默认导出，减少不同运行态装配器下的重复声明风险。
-- `YidaCodeCanvas` 组件使用 React 函数组件上下文；数据读写通过 fetch、开放 API、连接器代理或显式 props 数据桥完成。
+- `YidaCodeCanvas` 组件使用 React 函数组件上下文；运行时工具通过 `props.utils` 传入。文件上传、删除、预览和下载可以调用 `props.utils.uploadFile/uploadFiles/removeUploadedFile/previewFile/downloadFile`；业务数据读写仍通过 fetch、开放 API、连接器代理或显式数据桥完成。
 - 第三方前端资源只从可用资源清单中选择；React、antd、Ant Design Icons、ahooks、d3、recharts、Radix、framer-motion、lucide-react 等必须按规则 import，由编译器写入 `importedModules`。源码严禁出现 `const { Drawer } = antd`、`const { Search } = lucideReact`、`window.antd`、`window.icons` 等手写依赖全局。
 - 宜搭运行态组件按“先探测、可用增强、fallback 保底、值统一归一化”接入；以 `window.Deep` / `window.DeepYida` 探测为主，`window.YidaNativeComponents` 作为可用主题。嵌入门户数据管理视图时使用 `DataManageViews`，并显式传入目标表单 `form.value/formUuid`。
 
@@ -40,7 +40,7 @@ UI 和产品设计输入来自 `yida-design` 输出的 `prd/<项目名>/prd.md` 
 | 官网、看板、工作台、列表、详情、门户壳 | 同时读取 `yida-design` 的 PRD 与 design.md；生成器路径再读取派生 `page-spec.json`，按页面场景实现 `.canvas.jsx` |
 | 需要开放 API / 连接器读写数据 | 使用本技能，在 `YidaComp` 内自建 HTTP 数据桥 |
 | 需要门户 topBanner / quickEntry / 数据卡片 | 使用本技能，按“门户组件桥”接入，必要时 fallback 自绘 |
-| 需要成员、部门、附件上传、图片上传 | 使用本技能，按“宜搭组件桥”接入并归一化值 |
+| 需要成员、部门、附件上传、图片上传 | 使用本技能；上传优先使用 `props.utils` 文件 API，自带字段 UI 时按“宜搭组件桥”接入并归一化值 |
 | 需要字段结构、公式、联动、权限、报表、流程 | 使用对应配置型技能完成配置，自定义页面展示结果并分发页面事件 |
 | 新建页面需要字段、表单入口、成员/部门/上传或数据源 | 使用本技能，用数据桥、连接器或运行态组件桥实现 |
 
@@ -60,15 +60,16 @@ UI 和产品设计输入来自 `yida-design` 输出的 `prd/<项目名>/prd.md` 
 
 ### 2. 成员、部门、上传组件
 
-需要数据管理视图、成员、部门、附件上传、图片上传时，使用原生组件桥从页面 `window.Deep` / `window.DeepYida` 探测已挂载组件，并把探测结果写回当前页面实现计划。
+需要数据管理视图、成员或部门时，使用原生组件桥从页面 `window.Deep` / `window.DeepYida` 探测已挂载组件，并把探测结果写回当前页面实现计划。文件上传能力已通过 `props.utils` 向 Canvas 组件提供；只有需要平台完整字段 UI 时才额外探测上传组件。
 
-组件选择建议：
+组件与 API 选择建议：
 
 - `EmployeeField`：优先验证和接入，记录真实 `onChange` 结构。
 - `DepartmentSelectField`：验证部门搜索、弹层、权限提示、单选/多选后启用。
-- `AttachmentField` / `ImageField`：验证 OSS 签名、上传权限、预览、删除、失败提示后启用。
+- 自绘上传 UI：使用 `props.utils.uploadFile` / `uploadFiles`，通过 `onProgress(percent, event, file)` 展示逐文件 OSS 传输进度，通过 `onFileSuccess` / `onFileError` 管理批量上传中的部分成功与失败重试，通过整体 `onSuccess` / `onError` 收口 loading；通过 `AbortSignal` 取消上传。
+- 平台完整上传字段 UI：探测 `AttachmentField` / `ImageField`，验证上传、预览、删除和失败提示。
 
-做法：原生组件处理交互输入；页面业务状态保存归一化后的成员、部门、文件结构；提交通过 fetch / 连接器 / 开放 API 完成。组件验证通过时使用原生组件；组件条件不足时使用页面自绘输入、搜索或链接录入。
+做法：原生组件或文件 API 处理交互输入；页面业务状态保存归一化后的成员、部门、文件结构；提交通过 fetch / 连接器 / 开放 API 完成。文件 API 返回 `{ name, size, type, fileUuid, url, previewUrl, downloadUrl }`；不要在 Canvas 中手写 `/ossSign`、CSRF 或 OSS `FormData`。
 
 > 详细桥接规则、值结构和验收清单见 [native-components-bridge.md](references/native-components-bridge.md)。
 
@@ -80,7 +81,7 @@ UI 和产品设计输入来自 `yida-design` 输出的 `prd/<项目名>/prd.md` 
 2. **发布方式正确**：使用 `YidaCodeCanvas` 组件实现的源码写成 `.canvas.jsx` / `.canvas.tsx`，或发布时显式加 `--canvas`。
 3. **源码修改发布闭环**：本轮 Write/Edit/Create 了 `project/pages/src/*.canvas.jsx` 或 `project/pages/src/*.canvas.tsx` 后，final 前需要成功执行 `openyida publish <source> <appType> <displayPageFormUuid>`。有 publish 成功证据时表述为“页面已发布”；只有本地校验证据时表述为“源码已修改，尚未发布”。
 4. **依赖可加载**：普通 import 只使用 `YidaCodeCanvas` 可用资源清单内的前端资源；React、antd、Ant Design Icons、Recharts、ahooks、lucide-react 等包依赖必须写 `import ... from '包名'`。严禁写未声明裸变量依赖或手写 window 依赖，例如 `const { Drawer } = antd`、`const { Search } = lucideReact`、`const { ConfigProvider } = window.antd`、`const React = window.React`、`window.icons`。宜搭运行态组件才通过 `window.Deep`、`window.DeepYida`、`window.YidaNativeComponents` 探测。
-5. **使用 `YidaCodeCanvas` 组件契约**：页面代码写 `YidaComp` React 函数组件；数据、生命周期和渲染都通过 hooks、props、外层 yida JS-API 桥或连接器完成。组件内部不能直接写 `this.$(fieldId)`、`this.utils.yida.*` 或 `this.dataSourceMap`。
+5. **使用 `YidaCodeCanvas` 组件契约**：页面代码写 `YidaComp` React 函数组件；数据、生命周期和渲染都通过 hooks、props、外层 yida JS-API 桥或连接器完成。组件内部不能直接写 `this.$(fieldId)`、`this.utils.yida.*` 或 `this.dataSourceMap`。运行时文件能力使用 `props.utils.uploadFile/uploadFiles/removeUploadedFile/previewFile/downloadFile`，不能把 `props.utils` 误写成页面实例 `this.utils`。
 6. **副作用清理**：`useEffect` 注册事件、定时器、图表实例时必须返回 cleanup。
 7. **交互控件必须受控且真正驱动数据**：筛选 `Select`、搜索 `Input`/`Input.Search`、周期切换、`Tabs`/`Segmented`、批量/重置 `Button` 等控件都用 `useState` 建立受控状态，绑定 `onChange`/`onClick`，并让 `Table`/列表/卡片的数据源通过 `useMemo` 按状态派生后渲染。切换筛选后若当前选中项失效，回退选中态（如 `selected < filteredRows.length ? selected : 0`）。
 8. **视觉壳层必须消费 design.md**：工作台、门户、看板、首页、展示页和真实交付页写页面源码前，先从 `design.md` 抽取 `backgroundLayer`、`visualScaffold.rootShell`、`surfaceMap`、`componentRecipe`、`roundedRule`、`densityRule`、`breathingRule`、`themeProfile` 和 `yidaThemeRuntime`。若 `design.md` 声明 `backgroundLayer`，源码完成标准是：页面根节点带 `data-yida-theme-root="true"`；根节点或注入 CSS 承载背景层；背景 primitive 落到根节点、`::before`、`::after` 或等价背景层；内容层使用相对定位和更高 `z-index`；antd 页面包 `ConfigProvider`，并使用 `readBrandColor`、`getPopupContainer` 和控件 reset CSS 让主题、焦点和浮层生效。若 `design.md` 声明圆润高密和呼吸感规则，源码必须同步到 antd `borderRadius`、CSS `border-radius`、页面 padding/gap、区块间距、列表行高、状态摘要高度、空态高度和内容安全内距，并保证卡片 padding >20px、卡片 gap <20px、卡片圆角 0-32px。

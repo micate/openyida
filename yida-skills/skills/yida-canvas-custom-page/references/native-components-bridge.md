@@ -172,35 +172,51 @@ Smoke 页验证方式：编写最小 YidaCodeCanvas 探测页，只包含组件�
 }
 ```
 
-## 上传组件接入规则
+## 文件 API 与上传组件接入规则
 
-需要上传时，优先探测：
+`YidaCodeCanvas` 运行时会把页面 `utils` 作为 `props.utils` 传入 `YidaComp`。需要自绘上传交互时，优先使用以下文件 API：
+
+- `props.utils.uploadFile(options)`
+- `props.utils.uploadFiles(options)`
+- `props.utils.removeUploadedFile(file)`
+- `props.utils.previewFile(file, options)`
+- `props.utils.downloadFile(file, onError)`
+
+`uploadFile` / `uploadFiles` 已处理文件选择、上传权限、文件校验、OSS 签名、文件传输和文件注册。省略 `options.file/files` 时分别主动打开单选/多选文件选择器；拖拽或粘贴场景可以传入已有文件。页面不得自行创建 input、请求 `/ossSign`、读取 CSRF token 或拼接 OSS 表单。调用前检查方法是否存在；旧运行时缺少 API 时展示不可用提示或降级到已验证的业务连接器上传。
+
+上传选项支持 `file/files`、`type`、`accept`、`maxSize`、`timeout`、`signal`、`capture`、`previewImageProcess` 和 `onProgress(percent, event, file)`。单文件支持整体 `onSuccess(file)` / `onError(error)`；批量上传还支持 `onFileSuccess(uploadedFile, sourceFile, index)`、`onFileError(error, sourceFile, index)` 以及整体 `onSuccess(files)` / `onError(error)`。`previewImageProcess` 默认 `true`，对可处理的非 GIF 图片，在 `/ossFileHandle?` 预览地址尚无 `process` 时添加与组件一致的 200×200 裁剪及质量参数；传 `false` 时不主动追加，已有参数不会被移除。
+
+进度只覆盖 OSS 文件传输阶段；批量上传通过回调第三个参数区分文件，不提供聚合总进度。批量页面用逐文件成功/失败回调维护文件列表和重试状态，用整体回调在全部任务结束后恢复 loading；某个文件失败不会自动中止其余任务。回调不会替代 Promise，纯回调风格仍要消费 Promise rejection。用户取消选择时单文件返回 `null`、多文件返回 `[]`，并触发对应的整体成功回调。组件卸载时使用 `AbortController` 取消未完成上传。
+
+如果需要平台内置的字段外观、文件列表和交互，也可以继续探测：
 
 - `AttachmentField`
 - `ImageField`
 
-上传组件依赖 OSS 签名、上传权限、页面配置、文件预览扩展点和移动端环境，是最需要验证的能力。
+组件探测用于复用完整原生 UI，`props.utils` 文件 API 用于 Canvas 自绘 UI；二者不要叠加执行同一次上传。
 
-使用要求：
-
-- 原生上传作为增强能力；组件缺失或上传失败时，fallback 到链接录入或业务连接器上传。
-- Cookie、CSRF、OSS key 或内部上传密钥由平台、连接器或后端服务管理，Canvas 只消费安全返回结果。
-- 提交数据只使用归一化后的文件数组，`raw` 仅用于检查。
-
-推荐归一化结构：
+API 标准返回结构：
 
 ```js
 {
   name: '',
-  url: '',
-  downloadURL: '',
-  imgURL: '',
-  fileId: '',
   size: 0,
   type: '',
-  raw: {}
+  fileUuid: '',
+  url: '',
+  previewUrl: '',
+  downloadUrl: ''
 }
 ```
+
+使用要求：
+
+- Cookie、CSRF、OSS key 和上传回调地址由平台管理，Canvas 只消费标准返回结果。
+- `AttachmentField` / `ImageField` 的提交值使用标准化文件数组，不能保存浏览器 `File`。
+- 删除本地列表和 `removeUploadedFile` 分别处理；后者在文件不可删除时可能返回 `false`。
+- 所有异步调用处理失败状态，错误提示优先使用 `error.message`；需要区分阶段时读取 `error.stage`。
+
+完整参数、进度、取消和示例见 [附件上传指南](../../yida-custom-page/references/attachment-upload-guide.md)。
 
 ## 验收清单
 

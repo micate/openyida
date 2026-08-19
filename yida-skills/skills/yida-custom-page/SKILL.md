@@ -234,8 +234,11 @@ openyida check-page pages/src/home.oyd.jsx --json      # 输出机器可读的�
 | `openPage` | 打开新页面 |
 | `router.push` | 路由跳转 |
 | `loadScript` | 动态加载脚本 |
+| `uploadFile` / `uploadFiles` | 上传附件或图片，支持逐文件进度、逐文件成功/失败、整体回调、超时和取消；同时保留 Promise resolve/reject |
+| `removeUploadedFile` | 删除允许删除的临时上传文件 |
+| `previewFile` / `downloadFile` | 预览或下载标准文件对象 |
 
-> **上表为常用 API 速查，完整 API 列表见 [yida-api.md](../../references/yida-api.md)。复杂参数不确定时读取完整参数文档，禁止猜测参数。**
+> 文件页面优先使用上述运行时 API，不手写 `/ossSign` 和 OSS `FormData`。完整参数见 [附件上传指南](references/attachment-upload-guide.md)。上表其余 API 的完整列表见 [yida-api.md](../../references/yida-api.md)，复杂参数不确定时禁止猜测。
 
 ## Available Files
 
@@ -246,6 +249,7 @@ openyida check-page pages/src/home.oyd.jsx --json      # 输出机器可读的�
 | `component-jsx-guide` | `references/component-jsx-guide.md` | 输入控件、日期、选择、表格或筛选栏 |
 | `design-system` | `references/design-system.md` | 平台 JSX 组件样式实现适配；已进入 `yida-design` 后把 `design.md` 落到内联样式和组件状态 |
 | `theme-runtime-helpers` | `../yida-canvas-custom-page/references/theme-runtime-helpers.md` | 自定义色盘、`style#yida-global-theme`、隐藏导航沉浸页、iframe 父级或表单抽屉同源子 iframe 主题同步 |
+| `attachment-upload-guide` | `references/attachment-upload-guide.md` | 附件/图片上传、逐文件进度、取消、预览、下载或删除 |
 
 ## 参考文档
 
@@ -258,6 +262,7 @@ openyida check-page pages/src/home.oyd.jsx --json      # 输出机器可读的�
 | [平台 JSX 组件样式实现适配](references/design-system.md) | 将 `design.md` 的色彩、圆角、字体、间距、组件和状态规则落到平台 JSX 组件页面 | 用户明确要求视觉细化，或已进入 `yida-design` 后阅读 |
 | [主题运行时 helper](../yida-canvas-custom-page/references/theme-runtime-helpers.md) | 平台 JSX 组件自定义主题 token 注入，支持 iframe 父级窗口和表单抽屉同源子 iframe | 自定义色盘、隐藏导航沉浸页或 iframe 主题同步时阅读 |
 | [素材资源](references/assets-guide.md) | 图片/音乐/Icon 素材库、CDN 安全规范 | 需要引入图片、图标、音效时阅读 |
+| [附件上传指南](references/attachment-upload-guide.md) | `uploadFile/uploadFiles`、逐文件与整体回调、部分失败管理、上传进度、取消、预览、下载、删除及表单字段值 | 页面需要附件或图片上传时阅读 |
 | **全局共享文档** | | |
 | [宜搭 API](../../references/yida-api.md) | 表单/流程/工具 API 完整参数文档 | 复杂参数不确定、接口返回结构异常或正文速查不够时阅读 |
 | [大模型 API](../../references/model-api.md) | AI 文本生成接口参数 | 调用 `txtFromAI` 且参数不确定时阅读 |

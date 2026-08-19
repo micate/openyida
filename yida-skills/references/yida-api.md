@@ -1225,6 +1225,142 @@ this.utils.router.push('FORM-XXX', {}, false);
 
 ---
 
+### uploadFile / uploadFiles
+
+**描述**：上传附件或图片。API 内部完成上传权限检查、类型和大小校验、OSS 签名、文件传输、文件信息注册及返回值归一化；页面不要自行请求 `/ossSign` 或拼接 OSS 上传表单。
+
+- 平台 JSX 页面：`this.utils.uploadFile(options)` / `this.utils.uploadFiles(options)`
+- `YidaCodeCanvas` 页面：`props.utils.uploadFile(options)` / `props.utils.uploadFiles(options)`
+
+`options.file/files` 可选：传入时直接上传已有文件；不传时 API 会主动创建文件 input 并拉起系统文件选择器。`uploadFile` 使用单选，`uploadFiles` 使用多选。
+
+**参数**：
+
+| 参数 | 类型 | 是否必填 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `options.file` | `File` | 否 | `uploadFile` 要直接上传的文件；不传则打开单文件选择器 |
+| `options.files` | `File[]` / `FileList` | 否 | `uploadFiles` 要直接上传的文件；不传则打开多文件选择器 |
+| `options.type` | `'image' \| 'attachment'` | 否 | 不传时根据文件 MIME 和扩展名自动判断；显式传 `image` 时非图片会在上传前被拒绝 |
+| `options.accept` | String | 否 | 支持 `.png`、`image/png`、`image/*` 等规则，多个规则逗号分隔；`type: 'image'` 且未传时默认为 `image/*`；无法识别的规则为兼容历史行为不参与拦截 |
+| `options.maxSize` | Number | 否 | 单文件上限，单位 MB；图片最多 50 MB、附件最多 100 MB，传入更大值会收紧到系统上限；文件大小必须严格小于最终上限 |
+| `options.timeout` | Number | 否 | OSS 传输超时，单位毫秒 |
+| `options.signal` | AbortSignal | 否 | 取消文件选择等待或 OSS 上传 |
+| `options.capture` | `Boolean \| 'user' \| 'environment'` | 否 | 自动创建 input 时指定移动端摄像头方向 |
+| `options.previewImageProcess` | Boolean | 否 | 是否为图片 `previewUrl` 添加组件默认的 200×200 裁剪及质量参数，默认 `true`；传 `false` 时不主动追加，服务端地址已有的 `process` 参数不会被移除 |
+| `options.onProgress` | Function | 否 | 签名为 `(percent, event, file)` 的逐文件 OSS 传输进度回调 |
+| `options.onFileSuccess` | Function | 否 | 仅 `uploadFiles`；单个文件成功回调 `(uploadedFile, sourceFile, index)` |
+| `options.onFileError` | Function | 否 | 仅 `uploadFiles`；单个文件失败回调 `(error, sourceFile, index)` |
+| `options.onSuccess` | Function | 否 | 单文件为 `(file)`；多文件全部成功后为 `(files)`；用户取消选择时分别收到 `null` / `[]` |
+| `options.onError` | Function | 否 | 选择或上传失败的整体回调 `(error)` |
+
+`onProgress` 中 `percent` 的范围为 0～100，`event.loaded/event.total` 分别为已传输和总字节数。进度只覆盖文件向 OSS 传输的阶段，不包括权限检查、获取签名和上传后的文件注册。`uploadFiles` 不计算聚合总进度，应通过回调第三个参数 `file` 区分每个文件。
+
+批量上传中，每个任务结束时触发对应的 `onFileSuccess` 或 `onFileError`，可用来维护逐文件成功、失败和重试状态。返回的 Promise 会在任一任务失败时 reject，但其他任务不会自动取消；全部任务结束后，全部成功才触发整体 `onSuccess`，存在失败则触发一次整体 `onError`。因此整体 `onError` 可能晚于 Promise rejection 和部分逐文件回调。文件选择阶段失败则直接触发 `onError` 并 reject，不会启动上传任务。
+
+回调是 Promise 之外的补充通知，不会改变原有 Promise 语义，也不会因为回调自身抛错而改变上传结果：成功仍 resolve，任一文件失败仍 reject。使用纯回调风格时仍需消费返回 Promise 的 rejection，避免浏览器产生未处理的 Promise rejection。
+
+**返回值**：`uploadFile` 返回标准化文件对象，用户取消选择时返回 `null`；`uploadFiles` 返回按输入顺序排列的文件对象数组，用户取消选择时返回空数组。取消选择仍会用 `null` / `[]` 触发整体 `onSuccess`。同一时刻只能打开一个由 API 创建的文件选择器，重复调用会以 `select` 阶段错误拒绝。
+
+```javascript
+{
+  name: 'report.pdf',
+  size: 102400,
+  type: 'application/pdf',
+  fileUuid: 'APP_XXX/2026/8-17/UUID.pdf',
+  url: '/ossFileHandle?...',
+  previewUrl: '/inst/preview?...',
+  downloadUrl: '/ossFileHandle?...type=download'
+}
+```
+
+**请求示例**：
+
+```javascript
+export function uploadAttachments() {
+  var self = this;
+
+  this.utils.uploadFiles({
+    type: 'attachment',
+    accept: '.pdf,.doc,.docx,image/*',
+    maxSize: 20,
+    onProgress: function(percent, progressEvent, file) {
+      console.log(file.name, Math.round(percent), progressEvent.loaded, progressEvent.total);
+    },
+    onFileSuccess: function(uploadedFile, sourceFile, index) {
+      console.log('单个文件成功', uploadedFile, sourceFile, index);
+    },
+    onFileError: function(error, sourceFile, index) {
+      console.error('单个文件失败', error, sourceFile, index);
+    },
+    onSuccess: function(uploadedFiles) {
+      console.log('全部上传成功', uploadedFiles);
+    },
+    onError: function(error) {
+      self.utils.toast({
+        title: error && error.message ? error.message : '部分附件上传失败',
+        type: 'error',
+      });
+    },
+  }).catch(function() {
+    // onError 已处理 UI；仍需消费 uploadFiles 保留的 Promise rejection。
+  });
+}
+```
+
+上传错误包含 `code` 和 `stage`。`stage` 可能为：`select`、`permission`、`validate`、`sign`、`transfer`、`register`、`remove`；错误码格式为 `FILE_UPLOAD_<STAGE>`。用户主动关闭选择器会返回空值；只有选择器不可用、重复打开或被 `AbortSignal` 取消时才产生 `select` 错误。
+
+---
+
+### removeUploadedFile
+
+**描述**：删除平台允许删除的临时上传文件。成功删除返回 `true`；复制流程（URL 含 `cacheCode`）、当前页面已有表单实例或无法解析 `fileUuid` 时不发请求并返回 `false`；删除请求失败会以 `remove` 阶段错误 reject。
+
+```javascript
+this.utils.removeUploadedFile(file).then(function(removed) {
+  console.log('是否执行删除:', removed);
+}).catch(function(error) {
+  console.error(error);
+});
+```
+
+---
+
+### previewFile
+
+**描述**：统一预览图片或附件。JPEG/PNG 优先复用运行时图片查看器并支持同组切换；GIF、BMP、WebP、SVG 和其他附件打开解析出的预览或下载地址。成功发起预览返回 `true`，无可用地址返回 `false`。
+
+| 参数 | 类型 | 是否必填 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `file` | Object | 是 | `uploadFile` 返回的文件对象或兼容的已有文件值 |
+| `options.files` | Object[] | 否 | 同组图片，用于左右切换 |
+| `options.openLink` | Boolean | 否 | 未进入 JPEG/PNG 图片查看器时，是否优先通过 openLink 打开 |
+
+```javascript
+this.utils.previewFile(currentFile, {
+  files: allFiles,
+  openLink: true,
+});
+```
+
+---
+
+### downloadFile
+
+**描述**：使用宜搭当前环境适配的方式下载文件。优先读取 `downloadUrl/downloadURL`，否则使用 `url`；该方法不返回下载 Promise，第二个参数用于接收钉钉下载链路中的失败回调。
+
+```javascript
+this.utils.downloadFile(file, function(error) {
+  this.utils.toast({
+    title: error && error.message ? error.message : '下载失败',
+    type: 'error',
+  });
+}.bind(this));
+```
+
+> 文件上传、删除、预览、下载的完整页面示例和 Canvas 用法见 [附件上传指南](../skills/yida-custom-page/references/attachment-upload-guide.md)。
+
+---
+
 ### previewImage
 
 **描述**：图片预览，支持手势缩放、滑动切换。

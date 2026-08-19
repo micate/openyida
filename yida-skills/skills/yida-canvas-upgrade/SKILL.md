@@ -35,6 +35,8 @@ description: 将基于 JSX 组件 的自定义页面升级/迁移为使用 `Yida
 | `this.utils.yida.*` 表单 API | 不能默认照搬；需要通过 props、数据源注入；无法等价迁移时保留历史页面并输出阻塞点 |
 | `this.dataSourceMap.*` | 需要确认 YidaCodeCanvas props 是否透传数据源；未验证前不要迁移为可运行承诺 |
 | `this.utils.toast/dialog/router` | 改为 antd Message/Modal 或由 props 注入的能力；需验证 |
+| `this.utils.uploadFile/uploadFiles/removeUploadedFile/previewFile/downloadFile` | 已验证通过 `props.utils` 透传；迁移为对应的 `props.utils.*` 调用，上传中的副作用用 hooks 管理 |
+| 手写 `/ossSign` / OSS `FormData` 上传 | 改为 `props.utils.uploadFile` / `uploadFiles`，保留原限制条件，通过 `onProgress` 接入逐文件进度，通过 `onFileSuccess` / `onFileError` 迁移部分成功、失败和重试状态 |
 | 字段组件如 `EmployeeField` | 按 `YidaCodeCanvas` 组件依赖映射规则先做最小验证 |
 | `openyida publish` | 仍是最终发布方式：`.oyd.jsx` / `.openyida.jsx` 等平台 JSX 源码发布为 `Jsx` 组件，`.canvas.jsx` 源码（或加 `--canvas`）发布为 `YidaCodeCanvas` 组件。迁移就是把源码改写成 `.canvas.jsx` 后重新 `publish` |
 

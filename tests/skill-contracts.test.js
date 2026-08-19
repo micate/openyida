@@ -657,6 +657,50 @@ describe('OpenYida skill contracts', () => {
     expect(generation).toContain('用前端 seedRows 冒充真实表单数据');
   });
 
+  test('file upload APIs document progress and Canvas props utils contract', () => {
+    const api = readSkill('yida-skills/references/yida-api.md');
+    const nativePage = readSkill('yida-skills/skills/yida-custom-page/SKILL.md');
+    const uploadGuide = readSkill('yida-skills/skills/yida-custom-page/references/attachment-upload-guide.md');
+    const canvas = readSkill('yida-skills/skills/yida-canvas-custom-page/SKILL.md');
+    const bridge = readSkill('yida-skills/skills/yida-canvas-custom-page/references/native-components-bridge.md');
+    const upgrade = readSkill('yida-skills/skills/yida-canvas-upgrade/SKILL.md');
+
+    [api, nativePage, uploadGuide, canvas, bridge, upgrade].forEach((doc) => {
+      expect(doc).toContain('uploadFile');
+      expect(doc).toContain('uploadFiles');
+    });
+    [api, uploadGuide, canvas, bridge].forEach((doc) => {
+      expect(doc).toContain('onProgress');
+      expect(doc).toContain('onFileSuccess');
+      expect(doc).toContain('onFileError');
+      expect(doc).toContain('onSuccess');
+      expect(doc).toContain('onError');
+    });
+    [api, uploadGuide, canvas, bridge, upgrade].forEach((doc) => {
+      expect(doc).toContain('props.utils');
+    });
+    expect(api).toContain('removeUploadedFile');
+    expect(api).toContain('previewFile');
+    expect(api).toContain('downloadFile');
+    expect(api).toContain('previewImageProcess');
+    expect(api).toContain('默认 `true`');
+    expect(uploadGuide).toContain('不要在页面中手写 `/ossSign`');
+    expect(uploadGuide).toContain('不提供聚合总进度');
+    expect(uploadGuide).toContain('部分成功');
+    expect(uploadGuide).toContain('Promise rejection');
+    expect(api).toContain('任一任务失败时 reject');
+    expect(api).toContain('整体 `onError` 可能晚于 Promise rejection');
+    expect(api).toContain('同一时刻只能打开一个');
+    expect(api).toContain('文件大小必须严格小于最终上限');
+    expect(api).toContain('JPEG/PNG');
+    expect(api).toContain('无可用地址返回 `false`');
+    expect(api).toContain('不返回下载 Promise');
+    expect(uploadGuide).toContain('无法识别的规则');
+    expect(uploadGuide).toContain('批量成功结果保持输入文件顺序');
+    expect(uploadGuide).toContain('`true` / `false` / rejection');
+    expect(bridge).toContain('请求 `/ossSign`');
+  });
+
   test('yida-custom-page unified full-app build uses compact native defaults and reads references on demand', () => {
     const skill = readSkill('yida-skills/skills/yida-custom-page/SKILL.md');
 
