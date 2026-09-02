@@ -96,6 +96,7 @@ module.exports = {
     group_utility: 'Tiện ích',
     cmd_commands: 'Output machine-readable command manifest',
     cmd_agent_capabilities: 'Output one-shot agent capability snapshot',
+    cmd_app_capabilities: 'Kiểm tra chỉ đọc quyền truy cập YiDA và tạo ứng dụng',
     cmd_a2a: 'Start local read-only A2A adapter or print Agent Card',
     cmd_bridge: 'Start OpenYida local web bridge service',
     cmd_copy: 'Sao chép thư mục làm việc project',

@@ -96,6 +96,7 @@ module.exports = {
     group_utility: '工具',
     cmd_commands: '輸出機器可讀命令清單',
     cmd_agent_capabilities: '輸出 Agent 一次性能力快照',
+    cmd_app_capabilities: '唯讀檢查宜搭存取權與應用建立權',
     cmd_a2a: '啟動本機唯讀 A2A Adapter 或輸出 Agent Card',
     cmd_bridge: '啟動 OpenYida 本機網頁橋接服務',
     cmd_copy: '複製 project 工作目錄',

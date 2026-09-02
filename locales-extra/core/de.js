@@ -96,6 +96,7 @@ module.exports = {
     group_utility: 'Werkzeuge',
     cmd_commands: 'Maschinenlesbares Command Manifest ausgeben',
     cmd_agent_capabilities: 'Einmaligen Agent Capability Snapshot ausgeben',
+    cmd_app_capabilities: 'Schreibgeschützte Prüfung von YiDA-Zugriff und App-Erstellungsrecht',
     cmd_a2a: 'Lokalen schreibgeschützten A2A-Adapter starten oder Agent Card ausgeben',
     cmd_bridge: 'Lokalen OpenYida Web-Bridge-Dienst starten',
     cmd_copy: 'project-Arbeitsverzeichnis kopieren',

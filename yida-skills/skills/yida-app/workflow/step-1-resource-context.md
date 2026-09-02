@@ -8,6 +8,8 @@
 
 若还没有预检，优先跑一次 `openyida agent-capabilities --summary-json`；旧版本没有该命令时，退回 `openyida env --json` 和 `openyida login --check-only --json`。只有登录态可用后，才执行会创建、修改或发布宜搭资源的命令。
 
+当本轮结论是“缺少 app 且允许创建”时，必须在进入 Step 2 产品设计前执行 `openyida app-capabilities --json`。`canAccessYida` 和 `canCreateApp` 都必须为 `allowed`。若结果为 `denied`，先根据 `reasonCode/reasonMessage` 检查当前环境是否已暴露与该权限匹配的申请入口（例如宿主能力、已安装工具或平台提供的授权申请动作）：有明确入口时，调用一次申请并等待结果，申请成功后重新执行预检；申请被拒绝、失败、需要用户完成外部操作，或当前环境没有合适入口时，告知用户原因并停止。不得猜测申请命令、重复提交或绕过审批。`unknown` 表示系统或网络无法确认，不得当成“无权限”、不得发起权限申请，也不得继续创建。该命令是远端只读权限预检，不应塞进本地 `agent-capabilities`。
+
 ## 资源解析顺序
 
 按以下优先级选择目标，上游来源更明确时覆盖下游来源：

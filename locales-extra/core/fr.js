@@ -96,6 +96,7 @@ module.exports = {
     group_utility: 'Utilitaires',
     cmd_commands: 'Afficher le manifeste des commandes lisible par machine',
     cmd_agent_capabilities: 'Afficher un instantané unique des capacités agent',
+    cmd_app_capabilities: 'Vérifier en lecture seule l’accès YiDA et le droit de créer une application',
     cmd_a2a: 'Démarrer l’adaptateur A2A local en lecture seule ou afficher l’Agent Card',
     cmd_bridge: 'Démarrer le service web bridge local OpenYida',
     cmd_copy: 'Copier le répertoire de travail project',

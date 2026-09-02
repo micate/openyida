@@ -747,6 +747,12 @@ async function main() {
       break;
     }
 
+    case 'app-capabilities': {
+      const { run } = require('../lib/app/app-capabilities');
+      await run(args);
+      break;
+    }
+
     case 'corp-efficiency': {
       const { run } = require('../lib/corp-efficiency/corp-efficiency');
       await run(args);

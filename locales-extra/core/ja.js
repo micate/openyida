@@ -96,6 +96,7 @@ module.exports = {
     group_utility: 'ユーティリティ',
     cmd_commands: '機械可読コマンド manifest を出力',
     cmd_agent_capabilities: 'Agent 向けの一括 capability snapshot を出力',
+    cmd_app_capabilities: 'YiDA アクセス権とアプリ作成権を読み取り専用で確認',
     cmd_a2a: 'ローカル読み取り専用 A2A Adapter を起動、または Agent Card を出力',
     cmd_bridge: 'OpenYida ローカル Web ブリッジサービスを起動',
     cmd_copy: 'project 作業ディレクトリをコピー',

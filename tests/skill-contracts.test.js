@@ -103,6 +103,19 @@ describe('OpenYida skill contracts', () => {
     expect(skill).not.toContain('优先跑一次 `openyida agent-capabilities --json`');
   });
 
+  test('full app workflow checks remote creation capability before product design', () => {
+    const workflow = readSkill('yida-skills/skills/yida-app/workflow/step-1-resource-context.md');
+
+    expect(workflow).toContain('openyida app-capabilities --json');
+    expect(workflow).toContain('进入 Step 2 产品设计前');
+    expect(workflow).toContain('当前环境是否已暴露与该权限匹配的申请入口');
+    expect(workflow).toContain('申请成功后重新执行预检');
+    expect(workflow).toContain('不得猜测申请命令、重复提交或绕过审批');
+    expect(workflow).toContain('`unknown` 表示系统或网络无法确认');
+    expect(workflow).toContain('不得发起权限申请');
+    expect(workflow).toContain('不应塞进本地 `agent-capabilities`');
+  });
+
   test('login skill assigns browser ownership and waits for the original command', () => {
     const skill = readSkill('yida-skills/skills/yida-login/SKILL.md');
 

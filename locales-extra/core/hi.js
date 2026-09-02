@@ -96,6 +96,7 @@ module.exports = {
     group_utility: 'उपकरण',
     cmd_commands: 'Output machine-readable command manifest',
     cmd_agent_capabilities: 'Output one-shot agent capability snapshot',
+    cmd_app_capabilities: 'Read-only check for YiDA access and app creation permission',
     cmd_a2a: 'Start local read-only A2A adapter or print Agent Card',
     cmd_bridge: 'Start OpenYida local web bridge service',
     cmd_copy: 'project कार्य निर्देशिका कॉपी करें',

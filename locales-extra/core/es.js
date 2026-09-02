@@ -96,6 +96,7 @@ module.exports = {
     group_utility: 'Utilidades',
     cmd_commands: 'Emitir manifiesto de comandos legible por máquina',
     cmd_agent_capabilities: 'Emitir snapshot único de capacidades para agentes',
+    cmd_app_capabilities: 'Comprobar en modo lectura el acceso a YiDA y el permiso para crear aplicaciones',
     cmd_a2a: 'Iniciar adaptador A2A local de solo lectura o imprimir Agent Card',
     cmd_bridge: 'Iniciar servicio local OpenYida web bridge',
     cmd_copy: 'Copiar directorio de trabajo project',

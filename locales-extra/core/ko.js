@@ -96,6 +96,7 @@ module.exports = {
     group_utility: '유틸리티',
     cmd_commands: 'Output machine-readable command manifest',
     cmd_agent_capabilities: 'Output one-shot agent capability snapshot',
+    cmd_app_capabilities: 'YiDA 액세스 및 앱 생성 권한을 읽기 전용으로 확인',
     cmd_a2a: 'Start local read-only A2A adapter or print Agent Card',
     cmd_bridge: 'Start OpenYida local web bridge service',
     cmd_copy: 'project 작업 디렉토리 복사',
